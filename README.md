@@ -1,6 +1,7 @@
 # Lost Falcon
 
-The static website for **lostfalcon.app**, featuring the Tap & Count Android app.
+The static developer portfolio for **lostfalcon.app**, showcasing the Android
+apps published under the **LostFalcon** Google Play developer account.
 Plain HTML and CSS, with no build step, third-party fonts, analytics, or runtime
 dependencies. Only the `site/` directory is published.
 
@@ -55,8 +56,8 @@ services are required. Domain renewal remains a separate Namecheap cost.
 
 - Verify a Domain property for `lostfalcon.app` in Google Search Console using
   the TXT record it provides. Add that record in Cloudflare after the DNS switch.
-- Submit `https://lostfalcon.app/sitemap.xml`, then inspect the homepage, support,
-  and privacy URLs. Request indexing after the production domain works.
+- Submit `https://lostfalcon.app/sitemap.xml`, then inspect the homepage, app
+  detail, support, and privacy URLs. Request indexing after the production domain works.
 - Validate the app JSON-LD with Schema.org Validator. Google app rich results
   additionally require eligible, genuine rating/review and offer information.
   These are deliberately omitted rather than fabricated.
@@ -72,9 +73,24 @@ services are required. Domain renewal remains a separate Namecheap cost.
 
 ## Content maintenance
 
-Update `site/index.html`, `site/support/index.html`, and `site/privacy/index.html`
-directly. Update sitemap `lastmod` dates only when the corresponding page changes
-meaningfully. Keep metadata, structured data, and visible text consistent.
+The homepage is a developer overview and app directory; app-specific marketing
+and features live at `site/apps/tap-and-count/index.html`. Support and privacy
+remain at their existing URLs. Update these HTML files directly.
+
+The public LostFalcon developer listing was checked on November 15, 2026 in both
+US and India storefronts; it showed only **Tap & Count - Count things**. The directory
+does not invent additional apps or promise unreleased products. It links to the
+developer profile for the latest catalogue.
+
+For a new published app, add an app card to the homepage and a detail page under
+`site/apps/`. Update the homepage `CollectionPage` / `ItemList` JSON-LD and sitemap,
+and link the correct app support and privacy information. Run the content checks.
+This is a manually maintained static directory, not a live Google Play scraper.
+
+Update sitemap `lastmod` dates only when the corresponding page changes
+meaningfully. Keep metadata, structured data, and visible text consistent. The
+developer homepage and Tap & Count have separate social-preview PNGs; regenerate
+them from the corresponding SVG if the preview wording changes.
 
 The screenshots come from the app owner's Google Play listing and are served
 locally; visitors do not request images from Google. Sound and vibration are
@@ -96,3 +112,4 @@ whenever SDKs, permissions, backup behavior, or hosting services change.
 - [Google software app structured data](https://developers.google.com/search/docs/appearance/structured-data/software-app)
 - [Android Auto Backup](https://developer.android.com/identity/data/autobackup)
 - [Tap & Count on Google Play](https://play.google.com/store/apps/details?id=com.lostfalcon.tapcount)
+- [LostFalcon developer profile](https://play.google.com/store/apps/developer?id=LostFalcon)

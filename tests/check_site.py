@@ -159,13 +159,36 @@ class SiteChecks(unittest.TestCase):
                     self.assertNotIn("review", entity)
                     if entity["@type"] == "MobileApplication":
                         self.assertIn("Tap & Count", page.title)
+                        self.assertEqual(entity["url"], page.canonical[0])
                         self.assertIn(entity["downloadUrl"], page.links)
                         self.assertTrue(resolve_url(entity["screenshot"]).is_file())
 
-    def test_social_image_is_a_shareable_png(self):
-        image = (SITE / "assets/social.png").read_bytes()
-        self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", image[16:24]), (1200, 630))
+    def test_homepage_catalogue_links_to_app_details(self):
+        home = self.pages[SITE / "index.html"]
+        entities = home.json_ld[0]["@graph"]
+        self.assertNotIn("MobileApplication", [entity["@type"] for entity in entities])
+        catalogue = next(entity for entity in entities if entity["@type"] == "CollectionPage")
+        entries = catalogue["mainEntity"]["itemListElement"]
+        self.assertTrue(entries)
+        for entry in entries:
+            with self.subTest(app=entry["name"]):
+                detail = resolve_url(entry["url"])
+                self.assertIn(detail, self.pages)
+                self.assertIn(urlsplit(entry["url"]).path, home.links)
+                self.assertIn(entry["name"], self.pages[detail].title)
+                self.assertEqual(self.pages[detail].canonical, [entry["url"]])
+
+    def test_social_images_are_shareable_pngs(self):
+        urls = {
+            page.metadata["og:image"]
+            for page in self.pages.values()
+            if "og:image" in page.metadata
+        }
+        for url in urls:
+            with self.subTest(image=url):
+                image = resolve_url(url).read_bytes()
+                self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
+                self.assertEqual(struct.unpack(">II", image[16:24]), (1200, 630))
 
 
 if __name__ == "__main__":
