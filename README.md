@@ -12,57 +12,85 @@ python3 tests/check_site.py
 python3 -m http.server 8080 --directory site --bind 127.0.0.1
 ```
 
-Open `http://localhost:8080`. The checks run locally without dependencies.
-No GitHub Actions workflow is installed; publishing is handled by Cloudflare
-once Git integration is connected.
+Open `http://localhost:8080`. The content checks run locally without dependencies.
+This basic preview does not apply hosting headers or redirects. To check actual
+Firebase Hosting behavior, install the Firebase CLI and run:
 
-## Deploy on Cloudflare Pages
+```sh
+firebase emulators:exec --only hosting --project demo-lostfalcon \
+  "python3 tests/check_hosting.py http://127.0.0.1:8768"
+```
 
-1. In Cloudflare, open **Workers & Pages > Create application > Pages > Connect to Git**.
-2. Connect GitHub, granting access only to `surajkumarcse/lostfalconApp`.
-3. Select this repository and use these settings:
+The `demo-` project is local-only and does not deploy or bill cloud resources.
+The Hosting emulator binds only to localhost. No GitHub Actions workflow is installed.
 
-   | Setting | Value |
-   | --- | --- |
-   | Production branch | `main` |
-   | Framework preset | None |
-   | Build command | Leave empty |
-   | Build output directory | `site` |
-   | Root directory | Leave at the repository root |
+## Deploy on Firebase Hosting
 
-4. Deploy and check the generated `pages.dev` address.
-5. Add `lostfalcon.app` as a Cloudflare zone on the Free plan. Copy existing DNS
-   records, especially email MX and TXT records, before changing nameservers.
-6. In Namecheap, open **Domain List > Manage > Nameservers > Custom DNS** and enter
-   the two nameservers assigned to this zone by Cloudflare. The domain stays
-   registered and renewed at Namecheap. If DNSSEC is enabled at Namecheap, disable
-   it before the nameserver switch; re-enable it using Cloudflare's values after
-   the zone is active.
-7. In the Pages project's **Custom domains**, add both `lostfalcon.app` and
-   `www.lostfalcon.app`. Wait until both domains and their HTTPS certificates are
-   active. The included `_redirects` sends `www` visitors to the main domain,
-   preserving the path.
-8. Configure Cloudflare's production `pages.dev` address to redirect to the custom
-   domain using Bulk Redirects. Enable **Always Use HTTPS** for the zone.
+Use **Firebase Hosting (classic)**, not Firebase App Hosting. No Firebase SDK,
+database, Cloud Functions, billing account, or build step is needed for this site.
 
-Future pushes to `main` deploy automatically once Git integration is connected.
-Alternatively, drag the contents of `site/` into a Pages Direct Upload project.
-Cloudflare requires a new project to switch between Direct Upload and Git integration.
+1. Create or choose a Firebase project in the Firebase console. For no-cost hosting,
+   use a project on the **Spark** plan without linking a billing account. Confirm
+   that its default Hosting site does not already serve another website.
+2. Install the Firebase CLI if it is missing: `npm install -g firebase-tools`.
+3. Run `firebase login` locally and sign in to the account that owns the project.
+4. From this repository's root, run:
 
-Static asset requests are free on Cloudflare Pages. No Pages Functions or paid
-services are required. Domain renewal remains a separate Namecheap cost.
+   ```sh
+   python3 tests/check_site.py
+   firebase deploy --only hosting --project YOUR_PROJECT_ID
+   ```
+
+   Replace `YOUR_PROJECT_ID` with the exact project ID from the console. The explicit
+   project argument prevents accidentally deploying to an unrelated default project.
+   Do not run `firebase init hosting`: this repository already has `firebase.json`,
+   and initialization could overwrite the prepared configuration or HTML.
+5. Test the generated `YOUR_PROJECT_ID.web.app` site, including app details, support,
+   privacy, images, and a nonexistent path that should return the custom 404.
+
+`firebase.json` publishes only `site/`, sets the security headers, keeps canonical
+trailing-slash URLs, and does not rewrite unknown paths to the homepage. Old
+Cloudflare `_headers` and `_redirects` files have been removed and are explicitly
+excluded if reintroduced. Firebase handles hostname redirects through its custom
+domain settings, not a host-specific rule in this path-based configuration.
+
+Pushes to GitHub do **not** automatically deploy. Run the deploy command after
+pulling future changes; GitHub automation can be configured separately later.
+
+The Spark plan currently includes 10 GB of Hosting storage and 10 GB/month data
+transfer. Exceeding the no-cost transfer quota can disable the website until the
+next month; upgrading to Blaze enables paid overage. Domain renewal remains
+a separate Namecheap cost.
+
+## Connect lostfalcon.app
+
+1. In **Firebase Console > Hosting**, choose **Add custom domain** and enter
+   `lostfalcon.app`. Follow the wizard's verification and DNS instructions.
+2. If the domain uses Namecheap BasicDNS, open **Domain List > Manage > Advanced DNS**
+   in Namecheap. Add the TXT verification record using host `@`, if requested, and
+   the A or other records with the exact values Firebase supplies.
+3. Keep the verification TXT record for continued ownership verification and
+   certificate renewal. Remove only conflicting website records for the hostname
+   being connected; preserve email MX, SPF, DKIM, and other unrelated records.
+4. Keep Namecheap as the registrar and DNS provider; no nameserver switch is needed.
+   If you already changed nameservers to another provider, manage the records at
+   that authoritative DNS provider instead of Namecheap's inactive DNS editor.
+5. Add `www.lostfalcon.app` using Firebase's option to redirect it to `lostfalcon.app`.
+   Follow the records supplied for `www` as well.
+6. Wait for the domain to show **Connected** and HTTPS to become active. Certificate
+   provisioning can take up to 24 hours. Test both hostnames and page paths.
 
 ## Search launch checklist
 
 - Verify a Domain property for `lostfalcon.app` in Google Search Console using
-  the TXT record it provides. Add that record in Cloudflare after the DNS switch.
+  the TXT record it provides. Add that record at your authoritative DNS provider.
 - Submit `https://lostfalcon.app/sitemap.xml`, then inspect the homepage, app
   detail, support, and privacy URLs. Request indexing after the production domain works.
 - Validate the app JSON-LD with Schema.org Validator. Google app rich results
   additionally require eligible, genuine rating/review and offer information.
   These are deliberately omitted rather than fabricated.
 - Run PageSpeed Insights and check mobile layout, links, HTTPS, and a nonexistent
-  URL. The custom `404.html` prevents Pages from treating this site as an SPA.
+  URL. The custom `404.html` serves a real error page; no SPA fallback is configured.
 - Add the website and privacy policy URLs to the app's Google Play listing.
 - Use Search Console queries to guide future original counting tutorials.
 - The site contains canonical URLs, page descriptions, Open Graph/social cards,
@@ -104,10 +132,11 @@ whenever SDKs, permissions, backup behavior, or hosting services change.
 
 ## Official references
 
-- [Cloudflare Pages Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/)
-- [Cloudflare Pages custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/)
-- [Cloudflare Pages pricing](https://developers.cloudflare.com/pages/functions/pricing/)
-- [Namecheap nameserver instructions](https://www.namecheap.com/support/knowledgebase/article.aspx/767/10/how-to-change-dns-for-a-domain/)
+- [Firebase Hosting quickstart](https://firebase.google.com/docs/hosting/quickstart)
+- [Firebase Hosting configuration](https://firebase.google.com/docs/hosting/full-config)
+- [Firebase custom domains](https://firebase.google.com/docs/hosting/custom-domain)
+- [Firebase Hosting quotas and pricing](https://firebase.google.com/docs/hosting/usage-quotas-pricing)
+- [Firebase privacy and security](https://firebase.google.com/support/privacy)
 - [Google SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide)
 - [Google software app structured data](https://developers.google.com/search/docs/appearance/structured-data/software-app)
 - [Android Auto Backup](https://developer.android.com/identity/data/autobackup)
