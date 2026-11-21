@@ -1,6 +1,7 @@
 """Check the actual publish directory without installing dependencies."""
 
 import json
+import re
 import struct
 import unittest
 from html.parser import HTMLParser
@@ -189,6 +190,28 @@ class SiteChecks(unittest.TestCase):
                 image = resolve_url(url).read_bytes()
                 self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
                 self.assertEqual(struct.unpack(">II", image[16:24]), (1200, 630))
+
+    def test_upcoming_launcher_is_not_advertised_as_available(self):
+        home = (SITE / "index.html").read_text(encoding="utf-8")
+        card = re.search(r'<article\b[^>]*\bid="black-ui"[^>]*>(.*?)</article>', home, re.S)
+        self.assertIsNotNone(card)
+        preview = card.group(1)
+        self.assertIn("Black UI", preview)
+        self.assertIn("Coming soon.", preview)
+        self.assertIn("not yet available to download", preview)
+        self.assertIn("features may change before launch", preview)
+        self.assertNotIn("play.google.com", preview)
+        self.assertEqual(
+            re.findall(r'\bhref="([^"]+)"', preview),
+            ["/apps/black-ui/privacy/"],
+        )
+        self.assertIn("/assets/black-ui-home.png", preview)
+        entities = self.pages[SITE / "index.html"].json_ld[0]["@graph"]
+        catalogue = next(entity for entity in entities if entity["@type"] == "CollectionPage")
+        self.assertNotIn(
+            "Black UI",
+            [entry["name"] for entry in catalogue["mainEntity"]["itemListElement"]],
+        )
 
 
 if __name__ == "__main__":

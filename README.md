@@ -107,8 +107,15 @@ remain at their existing URLs. Update these HTML files directly.
 
 The public LostFalcon developer listing was checked on November 15, 2026 in both
 US and India storefronts; it showed only **Tap & Count - Count things**. The directory
-does not invent additional apps or promise unreleased products. It links to the
-developer profile for the latest catalogue.
+links to the developer profile for the latest published catalogue. Black UI,
+the Android launcher in development in `MyMinimalistDesignHomePage`, has a clearly
+labeled coming-soon preview on the homepage, using that project's existing home
+screen screenshot and documented features. It has no download link or announced
+release date and is not included in the published-app structured-data catalogue.
+Its separate privacy policy is at `/apps/black-ui/privacy/`, linked from the preview.
+It describes the current launcher's installed-app access, private local preferences,
+Android-managed backup, external app actions, and support email. Review the policy
+against the app's actual data handling before release and whenever that behavior changes.
 
 For a new published app, add an app card to the homepage and a detail page under
 `site/apps/`. Update the homepage `CollectionPage` / `ItemList` JSON-LD and sitemap,

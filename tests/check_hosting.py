@@ -33,7 +33,7 @@ class HostingChecks(unittest.TestCase):
                 self.assertIn(Page(local).title, unescape(response.read().decode("utf-8")))
 
     def test_trailing_slashes_match_canonical_urls(self):
-        for path in ("/support", "/privacy", "/apps/tap-and-count"):
+        for path in ("/support", "/privacy", "/apps/tap-and-count", "/apps/black-ui/privacy"):
             with self.subTest(path=path), urlopen(BASE_URL + path, timeout=10) as response:
                 self.assertEqual(response.status, 200)
                 self.assertEqual(response.url, BASE_URL + path + "/")
@@ -64,6 +64,7 @@ class HostingChecks(unittest.TestCase):
             ("/assets/styles.css", "text/css"),
             ("/assets/favicon.svg", "image/svg+xml"),
             ("/assets/app-count.webp", "image/webp"),
+            ("/assets/black-ui-home.png", "image/png"),
             ("/assets/social.png", "image/png"),
             ("/assets/tap-count-social.png", "image/png"),
             ("/sitemap.xml", "application/xml"),
@@ -73,6 +74,17 @@ class HostingChecks(unittest.TestCase):
                 self.assertEqual(response.status, 200)
                 self.assertEqual(response.headers.get_content_type(), mime)
                 self.assertTrue(response.read())
+
+    def test_homepage_publishes_upcoming_launcher_preview(self):
+        with urlopen(BASE_URL + "/", timeout=10) as response:
+            self.assertEqual(response.read(), (SITE / "index.html").read_bytes())
+
+    def test_black_ui_privacy_policy_matches_published_content(self):
+        with urlopen(BASE_URL + "/apps/black-ui/privacy/", timeout=10) as response:
+            self.assertEqual(
+                response.read(),
+                (SITE / "apps/black-ui/privacy/index.html").read_bytes(),
+            )
 
 
 if __name__ == "__main__":
